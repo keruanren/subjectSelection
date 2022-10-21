@@ -1,8 +1,11 @@
 from flask import Blueprint
-from models import Instructor, ReleaseSubject
+from models import Instructor, ReleaseSubject, Subject
 from common.ext import db
 from flask import jsonify,request
 import uuid
+import time
+import utils
+
 
 bp = Blueprint("teacher_view",__name__,url_prefix="/teacher")
 
@@ -140,7 +143,75 @@ def getSubjectList(teacherId):
 #发布课题
 @bp.route("/subject/post" ,methods =['POST'] )
 def postSubject():
-    return 1
+    try:
+        t_id = request.form.get("id") #teacher id
+        s_name = request.form.get("name")
+        s_description = request.form.get("description")
+        s_language = request.form.get("language")
+        s_platform = request.form.get("platform")
+        s_min_person = request.form.get("min_person")
+        s_max_person = request.form.get("max_person")
+        s_innovation = request.form.get("innovation")
+        s_max_group = request.form.get("max_group")
+        s_origin = request.form.get("origin")
+        creatTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())  # 2020-06-26 22:00:24
+        s_id = utils.IdWorker(1,2,0).get_id() #ID雪花算法
+
+        subject = Subject(subject_id = s_id,subject_name = s_name,description = s_description,language = s_language,\
+                        platform = s_platform,min_person = s_min_person,max_person = s_max_person,innovation = s_innovation,\
+                        max_group = s_max_group,origin = s_origin,created_time = creatTime,last_modified_time = creatTime,version = 1)
+        rs = ReleaseSubject(instructor_id = t_id,subject_id = subject.subject_id,released = 1,version = subject.version)
+
+        db.session.add(subject)
+        db.session.add(rs)
+        db.session.commit()
+        return jsonify(code = 200,msg = "课题增加成功",data = row2dict(subject))
+    except:
+        jsonify(code = 400,msg = "课题增加失败，请重试")
+
+#修改课题
+@bp.route("/subject/upgrade" ,methods =['POST'] )
+def upgradeSubject():
+    try:
+        s_id = request.form.get("id") #subject id
+        s = db.session.query(Subject).filter_by(subject_id = s_id)[0]
+        s_name = request.form.get("name")
+        if s_name !="" and s.subject_name != s_name:
+            s.subject_name = s_name
+        s_description = request.form.get("description")
+        if s_description !=""  and s.description != s_description:
+            s.description = s_description
+        s_language = request.form.get("language")
+        if s_language !=""  and s.language != s_language:
+            s.language = s_language
+        s_platform = request.form.get("platform")
+        if s_platform !=""  and s.platform != s_platform:
+            s.platform = s_platform
+        s_min_person = request.form.get("min_person")
+        if s_min_person !=""  and s.min_person != s_min_person:
+            s.min_person = s_min_person
+        s_max_person = request.form.get("max_person")
+        if s_max_person !=""  and s.max_person != s_max_person:
+            s.max_person = s_max_person
+        s_innovation = request.form.get("innovation")
+        if s_innovation !=""  and s.innovation != s_innovation:
+            s.innovation = s_innovation
+        s_max_group = request.form.get("max_group")
+        if s_max_group !=""  and s.max_group != s_max_group:
+            s.max_group = s_max_group
+        s_origin = request.form.get("origin")
+        if s_origin !=""  and s.origin != s_origin:
+            s.origin = s_origin
+        mTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())  # 2020-06-26 22:00:24
+        s.last_modified_time = mTime
+        s.version = s.version + 1
+        db.session.add(s)
+        db.session.commit()
+        return jsonify(code = 200,msg = "课题修改成功",data = row2dict(s))
+    except:
+        jsonify(code = 400,msg = "课题修改失败，请重试")
+
+#
 # 数据库类对象转为字典
 def row2dict(row):
     d = {}
