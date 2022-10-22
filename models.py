@@ -47,6 +47,8 @@ class Subject(Base):
     last_modified_time = Column(DateTime)
     version = Column(BigInteger)
 
+   # rs = relationship('ReleaseSubject', cascade="all,delete")
+
 
 class Instructor(Base):
     __tablename__ = 'instructor'
@@ -83,13 +85,13 @@ class ReleaseSubject(Base):
     __tablename__ = 'release_subject'
     __table_args__ = {'comment': '一个导师可以发布多个题目。\\r\\n也可以有多个导师联合指导题目'}
 
-    instructor_id = Column(ForeignKey('instructor.instructor_id', ondelete='RESTRICT', onupdate='RESTRICT'), primary_key=True, nullable=False)
-    subject_id = Column(ForeignKey('subject.subject_id', ondelete='RESTRICT', onupdate='RESTRICT'), primary_key=True, nullable=False, index=True)
+    instructor_id = Column(ForeignKey('instructor.instructor_id', ondelete='CASCADE', onupdate='RESTRICT'), primary_key=True, nullable=False)
+    subject_id = Column(ForeignKey('subject.subject_id', ondelete='CASCADE', onupdate='RESTRICT'), primary_key=True, nullable=False, index=True)
     released = Column(TINYINT(1), comment='可以存为草稿')
     version = Column(BigInteger)
 
     instructor = relationship('Instructor')
-    subject = relationship('Subject')
+    subject = relationship('Subject') #级联删除
 
 
 class Student(Base):

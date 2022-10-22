@@ -1,5 +1,5 @@
 from flask import Blueprint
-from models import Instructor, ReleaseSubject, Subject
+from models import Instructor, ReleaseSubject, Subject, Team
 from common.ext import db
 from flask import jsonify,request
 import uuid
@@ -81,39 +81,39 @@ def teacherUpdate():
         teacher_id = request.form.get("id")
         teacher = db.session.query(Instructor).filter_by(instructor_id = teacher_id)[0]
         teacher_name = request.form.get("name")
-        if teacher_name is not None and teacher_name != teacher.instructor_name:
+        if teacher_name !="" and teacher_name != teacher.instructor_name:
             teacher.instructor_name = teacher_name
 
         teacher_password = request.form.get("password")
-        if teacher_password is not None and teacher_password != teacher.password:
+        if teacher_password !="" and teacher_password != teacher.password:
             teacher.password = teacher_password
 
         teacher_phone = request.form.get("phone")
-        if teacher_phone is not None and teacher_phone != teacher.phone_number:
+        if teacher_phone !="" and teacher_phone != teacher.phone_number:
             teacher.phone_number = teacher_phone
 
         teacher_email = request.form.get("email")
-        if teacher_email is not None and teacher_email != teacher.email:
+        if teacher_email !="" and teacher_email != teacher.email:
             teacher.email = teacher_email
 
         teacher_description = request.form.get("description")
-        if teacher_description is not None and teacher_description != teacher.description:
+        if teacher_description !="" and teacher_description != teacher.description:
             teacher.description = teacher_description
 
         teacher_gender = request.form.get("gender")
-        if teacher_gender is not None and teacher_gender != teacher.gender:
+        if teacher_gender !="" and teacher_gender != teacher.gender:
             teacher.gender = teacher_gender
 
         teacher_birthday = request.form.get("birthday")#格式 xxxx-xx-xx
-        if teacher_birthday is not None and teacher_birthday != teacher.birthday:
+        if teacher_birthday !="" and teacher_birthday != teacher.birthday:
             teacher.birthday = teacher_birthday
 
         teacher_title = request.form.get("title")
-        if teacher_title is not None and teacher_title != teacher.title:
+        if teacher_title !="" and teacher_title != teacher.title:
             teacher.title = teacher_title
 
         teacher_dept = request.form.get("dept")
-        if teacher_dept is not None and teacher_dept != teacher.dept_id:
+        if teacher_dept !="" and teacher_dept != teacher.dept_id:
             teacher.dept_id = teacher_dept
 
         db.session.commit()
@@ -211,7 +211,32 @@ def upgradeSubject():
     except:
         jsonify(code = 400,msg = "课题修改失败，请重试")
 
-#
+#删除课题
+@bp.route("subject/delete/<int:subjectId>",methods = ['GET'])
+def deleteSubject(subjectId):
+    try:
+        if subjectId == "":
+            return jsonify(code = 200,msg = "没有该课题,删除失败")
+        t = db.session.query(Team).filter_by(subject_id = subjectId).all()
+        print(t)
+        if len(t) > 0 :
+            return jsonify(code = 200,msg = "该课题已经被选择，无法删除")
+
+        s = db.session.query(Subject).filter_by(subject_id = subjectId)[0]
+        #print(s)
+        rs = db.session.query(ReleaseSubject).filter_by(subject_id = subjectId)[0]
+        if rs is not None:
+            db.session.delete(rs)
+            db.session.commit()
+        #time.sleep(0.5)
+        if s is not None:
+            db.session.delete(s)
+            db.session.commit()
+        return jsonify(code = 200,msg = "课题删除成功")
+    except:
+        return jsonify(code = 400,msg = "删除失败请重试")
+
+
 # 数据库类对象转为字典
 def row2dict(row):
     d = {}
